@@ -1,0 +1,48 @@
+###모듈 설치###
+from tensorflow import keras
+import tensorflow as tf
+from keras.layers import Input,Lambda,Dense,Flatten,Conv2D,MaxPooling2D
+from keras.models import Model,Sequential
+from keras.preprocessing import image
+from keras.preprocessing.image import ImageDataGenerator
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import metrics
+from sklearn.metrics import accuracy_score
+import seaborn as sns
+
+###경로 지정###
+image_size=[225,225]
+train_path = 'drive/MyDrive/Colab Notebooks/chest_xray/train'
+test_path = 'drive/MyDrive/Colab Notebooks/chest_xray/test'
+
+###이미지 전처리###
+train_datagen=ImageDataGenerator(rescale=1/255,shear_range=0.2,zoom_range=0.2,horizontal_flip=True)
+test_datagen=ImageDataGenerator(rescale=1/255)
+train_data=train_datagen.flow_from_directory(train_path,target_size=(224,224),batch_size=32,class_mode='categorical')
+test_data=test_datagen.flow_from_directory(test_path,target_size=(224,224),batch_size=32,class_mode='categorical')
+
+###모델 구성###
+x_ray_KNU=Sequential()
+x_ray_KNU.add(Conv2D(32,(3,3),activation='relu',input_shape=(225,225,3)))
+x_ray_KNU.add(MaxPooling2D((2,2)))
+x_ray_KNU.add(Conv2D(64,(3,3),activation='relu'))
+x_ray_KNU.add(MaxPooling2D((2,2)))
+x_ray_KNU.add(Flatten())
+x_ray_KNU.add(Dense(32,activation='relu'))
+x_ray_KNU.add(Dense(2,activation='softmax'))
+
+x_ray_KNU.summary()
+
+###모델 학습###
+x_ray_KNU.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
+x_ray_KNU_train=x_ray_KNU.fit(train_data,validation_data=test_data,epochs=20)
+
+###ACCURACY 그래프###
+plt.style.use('fivethirtyeight')
+plt.figure(figsize=(14,14))
+plt.plot(x_ray_KNU_train.history['accuracy'],label='accuracy',color='green')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.yticks(np.arange(0, 1, step=0.04))
+plt.show()
